@@ -1,6 +1,6 @@
 import streamlit as st
-import cv2
 from ultralytics import YOLO # Assuming ultralytics YOLO
+import cv2
 import time
 import os
 import base64
