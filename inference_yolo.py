@@ -9,7 +9,7 @@ import numpy as np
 import io
 
 # --- Configuration ---
-MODEL_PATH = "C:\\Users\\LUTHFILLAH AKHTAR F\\Documents\\Data Science\\Yolo\\yolov11\\runs\\segment\\train49\\weights\\best.pt" # Please ensure this path is correct
+MODEL_PATH = "models/your_model.pt" # Please ensure this path is correct
 AUDIO_DIR = "." # Directory where your .mp3 files are located
 DETECTION_THRESHOLD_FOR_PLAY = 2.0 # Seconds an object must be detected before playing audio
 DETECTION_COOLDOWN_AFTER_PLAY = 5.0 # Seconds to wait before playing audio for the same class again
