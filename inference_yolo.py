@@ -106,7 +106,12 @@ if 'uploaded_image_processed' not in st.session_state:
 
 # --- RTC Configuration for WebRTC ---
 RTC_CONFIGURATION = RTCConfiguration({
-    "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+    "iceServers": [
+        {"urls": "stun:stun.l.google.com:19302"},
+        {"urls": "stun:stun1.l.google.com:19302"}, # Adding another Google STUN server
+        # You could add other public STUN servers, e.g., from Twilio:
+        # {"urls": "stun:global.stun.twilio.com:3478"}
+    ]
 })
 
 # --- Placeholder for audio controlled by the main script ---
