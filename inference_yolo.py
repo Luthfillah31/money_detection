@@ -13,7 +13,7 @@ MODEL_PATH = "model/best.pt" # Please ensure this path is correct
 AUDIO_DIR = "." # Directory where your .mp3 files are located
 DETECTION_THRESHOLD_FOR_PLAY = 2.0 # Seconds an object must be detected before playing audio
 DETECTION_COOLDOWN_AFTER_PLAY = 5.0 # Seconds to wait before playing audio for the same class again
-WEBCAM_ID = 0 # 0 for default webcam, change if you have multiple
+WEBCAM_ID = 1 # 0 for default webcam, change if you have multiple
 DEFAULT_CONFIDENCE_THRESHOLD = 0.25 # Default confidence threshold for YOLO model
 
 # --- YOLO Model Loading (Cache to load only once) ---
