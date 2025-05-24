@@ -7,7 +7,7 @@ import base64
 from PIL import Image
 import numpy as np
 import io
-from streamlit_webrtc import VideoTransformerBase, webrtc_streamer, RTCConfiguration, WebRtcMode
+from streamlit_webrtc import VideoProcessorBase, webrtc_streamer, RTCConfiguration, WebRtcMode
 
 # --- Configuration ---
 MODEL_PATH = "model/best.pt"  # Please ensure this path is correct
@@ -114,15 +114,14 @@ main_audio_placeholder = st.empty()
 
 
 # --- Video Transformer for WebRTC ---
-class YoloVideoTransformer(VideoTransformerBase):
+class YoloVideoProcessor(VideoProcessorBase): # Renamed class and changed base class
     def __init__(self):
-        self.model = model # Use the globally loaded model
-        # self.confidence_threshold = confidence_slider # This would capture initial value
-        # We will read st.session_state.confidence_slider_value directly in recv for dynamic updates
+        self.model = model
+        # self.confidence_threshold = st.session_state.confidence_slider_value # Access directly in recv
 
     def _process_frame_for_yolo_and_audio(self, frame: np.ndarray):
+        # ... (this internal logic remains the same) ...
         current_time = time.time()
-        # Directly use the session state value for confidence
         current_confidence = st.session_state.confidence_slider_value
         results = self.model(frame, conf=current_confidence, verbose=False)
         annotated_frame = frame.copy()
@@ -130,7 +129,7 @@ class YoloVideoTransformer(VideoTransformerBase):
 
         if results and results[0].boxes:
             result = results[0]
-            annotated_frame = result.plot(img=annotated_frame, conf=True) # plot draws BGR
+            annotated_frame = result.plot(img=annotated_frame, conf=True)
             boxes = result.boxes
 
             for i in range(len(boxes)):
@@ -151,61 +150,37 @@ class YoloVideoTransformer(VideoTransformerBase):
 
                     if (time_since_first_detection >= DETECTION_THRESHOLD_FOR_PLAY and
                         time_since_last_played >= DETECTION_COOLDOWN_AFTER_PLAY):
-                        
-                        # Trigger audio playback from the main thread
-                        # Store the class name and the time it became eligible to play
                         st.session_state.audio_trigger = {
                             "class_name": class_name, 
-                            "eligible_time": current_time, # This helps in updating last_played_time accurately
-                            "id": f"{class_name}_{current_time}" # Unique ID to ensure it's a new trigger
+                            "eligible_time": current_time,
+                            "id": f"{class_name}_{current_time}"
                         }
-                        # The main loop will handle actual playback and updating 'last_played_time'
-                        
                 except Exception as e:
-                    print(f"Error processing a detection box or audio logic in transformer: {e}")
+                    print(f"Error processing a detection box or audio logic in processor: {e}")
         
-        # Reset 'first_detected_time' for classes no longer in view
         for class_name_in_state in list(st.session_state.class_detection_state.keys()):
             if class_name_in_state not in detected_classes_in_current_frame:
                 st.session_state.class_detection_state[class_name_in_state]['first_detected_time'] = current_time
         
         return annotated_frame
 
-    def recv(self, frame: any): # 'any' to be flexible with frame type from webrtc
-        # `streamlit-webrtc` typically provides `av.VideoFrame`
-        # For versions using `aiortc` directly, frame might be `aiortc.VideoFrame`
-        # If it's an `av.VideoFrame`:
-        img = frame.to_ndarray(format="bgr24") # Convert to BGR numpy array for OpenCV
-        
+    # The recv method signature usually expects an av.VideoFrame
+    def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+        img = frame.to_ndarray(format="bgr24")
         annotated_img = self._process_frame_for_yolo_and_audio(img)
-        
-        # Convert annotated BGR image back to VideoFrame, assuming RGB for display is preferred by webrtc component
-        # However, result.plot() returns BGR. If webrtc_streamer displays BGR fine, no conversion needed.
-        # If it expects RGB, then:
-        # annotated_img_rgb = cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
-        # return av.VideoFrame.from_ndarray(annotated_img_rgb, format="rgb24")
-        
-        # Let's assume BGR is fine or that to_ndarray/from_ndarray handles it.
-        # Or, if the component handles BGR by default after to_ndarray(format="bgr24")
-        return frame.from_ndarray(annotated_img, format="bgr24")
+        # Ensure the returned frame is also an av.VideoFrame
+        return av.VideoFrame.from_ndarray(annotated_img, format="bgr24")
 
-
-# --- Main Application Logic ---
-
+# ... (in the main app logic for webcam) ...
 if input_choice == "Webcam (via your browser)":
     st.info("Webcam will start via your browser. Grant permissions when prompted. Detection is continuous.")
-    
-    # Hide start/stop buttons for webcam mode as webrtc_streamer has its own
-    # Or, you can use them to control the webrtc_streamer's "desired_playing_state" if needed.
-    # For simplicity, we rely on webrtc_streamer's built-in controls.
-    
-    st.session_state.running_image_processing = False # Ensure image processing is not active
+    st.session_state.running_image_processing = False
 
     webrtc_ctx = webrtc_streamer(
         key="yolo-object-detection",
         mode=WebRtcMode.SENDRECV,
         rtc_configuration=RTC_CONFIGURATION,
-        video_transformer_factory=YoloVideoTransformer,
+        video_processor_factory=YoloVideoProcessor, # Changed argument name and class name
         media_stream_constraints={"video": True, "audio": False},
         async_processing=True,
     )
