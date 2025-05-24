@@ -1,7 +1,5 @@
 streamlit
 ultralytics
-opencv-python-headless  # Or opencv-python if you need full GUI locally
+opencv-python
 pillow
 numpy
-streamlit-webrtc
-av
