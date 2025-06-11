@@ -104,9 +104,9 @@ if input_choice == "Take Snapshot":
     )
     st.session_state.confidence_threshold_snapshot = confidence_snapshot_slider
 
-    # Clear previous image/message from placeholder if any
-    # st_frame_placeholder.empty() # Clear any previous image from upload mode
-
+    # --- ADDED GUIDE NOTE ---
+    st.info("Place the money clearly in front of the camera before taking a picture.")
+    
     img_file_buffer = st.camera_input("Take a picture using your webcam:")
 
     if img_file_buffer is not None:
@@ -160,9 +160,6 @@ if input_choice == "Take Snapshot":
                                 autoplay_audio_html(audio_file_path, audio_output_placeholder)
                                 class_state['last_played_time'] = current_time
                                 played_audio_for_snapshot_run.add(class_name)
-                                # If multiple distinct sounds, this might clear previous before it finishes.
-                                # For snapshot, maybe collect all sounds and play them sequentially or just one.
-                                # For now, it will attempt to play each, one after another if cooldown allows.
                                 time.sleep(0.2) # Small delay if multiple sounds are triggered
                             else:
                                 print(f"Audio file not found for '{class_name}': {audio_file_path}")
@@ -183,8 +180,6 @@ if input_choice == "Take Snapshot":
 
 
 elif input_choice == "Upload Image":
-    # Clear snapshot specific things if any
-    # (snapshot mode already clears placeholders when it runs)
     audio_output_placeholder.empty() 
 
     confidence_upload_slider = st.slider(
@@ -197,6 +192,9 @@ elif input_choice == "Upload Image":
     )
     st.session_state.confidence_threshold_upload = confidence_upload_slider
 
+    # --- ADDED GUIDE NOTE ---
+    st.info("Ensure the money is clearly visible in the image you upload.")
+
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"], key="file_uploader")
 
     if st.button("Process Uploaded Image", key="start_image_processing"):
@@ -204,9 +202,6 @@ elif input_choice == "Upload Image":
             st.session_state.uploaded_image_processed = False
             st_frame_placeholder.empty()
             audio_output_placeholder.empty()
-            # Reset class_detection_state or use a local set for cooldowns within this image process
-            # For simplicity, image upload audio plays if file exists, cooldown logic might be less critical here or handled differently.
-            # Let's use a simple set to avoid replaying for the same class in *this single image*.
 
             st.write("Processing uploaded image...")
             try:
