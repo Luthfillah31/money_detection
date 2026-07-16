@@ -1,5 +1,7 @@
 streamlit
 ultralytics
-opencv-python
+opencv-python-headless
 pillow
 numpy
+libgl1-mesa-glx
+libglib2.0-0
